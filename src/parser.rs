@@ -1,6 +1,9 @@
-use crate::lexer::Tokens;
+use crate::lexer::Token;
 use crate::types::Literal;
 use std::collections::VecDeque;
+
+// TODO: add a definition node
+// TODO: after definition works, add a quotation node
 
 pub(crate) enum Node {
     Lit(Literal),
@@ -8,14 +11,14 @@ pub(crate) enum Node {
 }
 
 pub(crate) struct Parser {
-    tokens: VecDeque<Tokens>,
+    tokens: VecDeque<Token>,
     ast: Vec<Node>,
 }
 
 impl Parser {
     pub fn new<T>(tokens: T) -> Self
     where
-        T: Into<VecDeque<Tokens>>,
+        T: Into<VecDeque<Token>>,
     {
         Parser {
             tokens: tokens.into(),
@@ -26,8 +29,8 @@ impl Parser {
     pub fn parse(mut self) -> Vec<Node> {
         while !self.tokens.is_empty() {
             match self.tokens.pop_front().unwrap() {
-                Tokens::Lit(l) => self.ast.push(Node::Lit(l)),
-                Tokens::Op(w) => self.ast.push(Node::Word(w)),
+                Token::Lit(l) => self.ast.push(Node::Lit(l)),
+                Token::Op(w) => self.ast.push(Node::Word(w)),
             }
         }
         self.ast

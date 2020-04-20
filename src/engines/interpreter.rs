@@ -1,13 +1,23 @@
 use crate::parser::Node;
 use crate::types::Literal;
 use std::collections::HashMap;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display, Error, Formatter};
 use std::ops::{Add, Div, Mul};
+use std::cmp::{Eq, PartialEq, PartialOrd, Ord};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 enum Cell {
     Lit(Literal),
     Quotation,
+}
+
+impl Display for Cell {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        match self {
+            Cell::Lit(l) => write!(f, "{}", l),
+            Cell::Quotation => write!(f, "quotation"),
+        }
+    }
 }
 
 impl Add<Cell> for Cell {
@@ -46,8 +56,14 @@ enum Operation {
     Plus,
     Div,
     Mul,
+    Dup,
     Swap,
     Println,
+    Equal,
+    Lt,
+    Gt,
+    Lte,
+    Gte,
 }
 
 impl From<String> for Operation {
@@ -58,6 +74,12 @@ impl From<String> for Operation {
             "*" => Self::Mul,
             "swap" => Self::Swap,
             "." => Self::Println,
+            "=" => Self::Equal,
+            "<" => Self::Lt,
+            ">" => Self::Gt,
+            "<=" => Self::Lte,
+            ">=" => Self::Gte,
+            "dup"=> Self::Dup,
             _ => panic!("[{}] is not a known operation.", s)
         }
     }
@@ -66,6 +88,7 @@ impl From<String> for Operation {
 pub(crate) struct Interpreter {
     active_stack: usize,
     stacks: Vec<Stack>,
+    dictionary: HashMap<String, Vec<Operation>>,
 }
 
 impl Interpreter {
@@ -73,6 +96,7 @@ impl Interpreter {
         Interpreter {
             active_stack: 0,
             stacks: vec![vec![]],
+            dictionary: HashMap::new(),
         }
     }
     pub fn apply(&mut self, node: Node) {
@@ -92,6 +116,17 @@ impl Interpreter {
 
     fn execute(&mut self, op: Operation) {
         match op {
+            Operation::Dup => {
+                let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
+                let val = stack.pop().unwrap();
+                match val {
+                    Cell::Lit(l) => {
+                        stack.push(Cell::Lit(l.clone()));
+                        stack.push(Cell::Lit(l.clone()));
+                    },
+                    _ => panic!("only literals may be duped"),
+                }
+            }
             Operation::Swap => {
                 let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
                 let stack_len = stack.len();
@@ -99,7 +134,7 @@ impl Interpreter {
             }
             Operation::Println => {
                 let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
-                println!("{:?}", stack.pop().unwrap());
+                println!("{}", stack.pop().unwrap());
             }
             Operation::Plus => {
                 let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
@@ -118,6 +153,36 @@ impl Interpreter {
                 let l1 = stack.pop().unwrap();
                 let l2 = stack.pop().unwrap();
                 stack.push(l2 / l1);
+            },
+            Operation::Equal => {
+                let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
+                let l1 = stack.pop().unwrap();
+                let l2 = stack.pop().unwrap();
+                stack.push(Cell::Lit(Literal::Boolean(l1 == l2)));
+            },
+            Operation::Lt => {
+                let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
+                let l1 = stack.pop().unwrap();
+                let l2 = stack.pop().unwrap();
+                stack.push(Cell::Lit(Literal::Boolean(l2 < l1)));
+            },
+            Operation::Lte => {
+                let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
+                let l1 = stack.pop().unwrap();
+                let l2 = stack.pop().unwrap();
+                stack.push(Cell::Lit(Literal::Boolean(l2 <= l1)));
+            },
+            Operation::Gt => {
+                let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
+                let l1 = stack.pop().unwrap();
+                let l2 = stack.pop().unwrap();
+                stack.push(Cell::Lit(Literal::Boolean(l2 > l1)));
+            },
+            Operation::Gte => {
+                let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
+                let l1 = stack.pop().unwrap();
+                let l2 = stack.pop().unwrap();
+                stack.push(Cell::Lit(Literal::Boolean(l2 >= l1)));
             }
         }
     }
