@@ -87,6 +87,9 @@ impl From<String> for Operation {
 
 pub(crate) struct Interpreter {
     active_stack: usize,
+    // TODO: add stack operations
+    // switch ( n -- ) - switches between stacks
+    // take ( n m -- ) - takes N items from stack M
     stacks: Vec<Stack>,
     dictionary: HashMap<String, Vec<Operation>>,
 }
