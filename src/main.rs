@@ -1,4 +1,5 @@
 mod lexer;
+mod oldlexer;
 mod parser;
 mod types;
 mod engines;
@@ -9,7 +10,7 @@ fn main() -> Result<(), std::io::Error> {
     let source = read_to_string("./simple_test.f")?;
     println!("{}", source);
     println!("======");
-    let tokens = lexer::Lexer::lex(source);
+    let tokens = oldlexer::Lexer::lex(source);
     let parser = parser::Parser::new(tokens);
     let code = parser.parse();
     let mut interpreter = engines::interpreter::Interpreter::new();

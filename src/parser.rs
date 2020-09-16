@@ -1,4 +1,4 @@
-use crate::lexer::Token;
+use crate::oldlexer::Token;
 use crate::types::Literal;
 use std::collections::VecDeque;
 
