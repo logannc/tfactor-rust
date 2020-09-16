@@ -1,9 +1,9 @@
 use crate::parser::Node;
 use crate::types::Literal;
+use std::cmp::{PartialEq, PartialOrd};
 use std::collections::HashMap;
 use std::fmt::{Debug, Display, Error, Formatter};
 use std::ops::{Add, Div, Mul};
-use std::cmp::{Eq, PartialEq, PartialOrd, Ord};
 
 #[derive(Debug, PartialEq, PartialOrd)]
 enum Cell {
@@ -79,8 +79,8 @@ impl From<String> for Operation {
             ">" => Self::Gt,
             "<=" => Self::Lte,
             ">=" => Self::Gte,
-            "dup"=> Self::Dup,
-            _ => panic!("[{}] is not a known operation.", s)
+            "dup" => Self::Dup,
+            _ => panic!("[{}] is not a known operation.", s),
         }
     }
 }
@@ -88,6 +88,7 @@ impl From<String> for Operation {
 pub(crate) struct Interpreter {
     active_stack: usize,
     // TODO: add stack operations
+    // Also need to make sure the stacks are initialized when used
     // switch ( n -- ) - switches between stacks
     // take ( n m -- ) - takes N items from stack M
     stacks: Vec<Stack>,
@@ -108,7 +109,7 @@ impl Interpreter {
                 println!("adding {:?} to stack", l);
                 self.stacks[self.active_stack].push(Cell::Lit(l));
                 println!("stack: {:?}", self.stacks[self.active_stack]);
-            },
+            }
             Node::Word(name) => {
                 println!("stack before op: {:?}", self.stacks[self.active_stack]);
                 self.execute(name.into());
@@ -120,69 +121,69 @@ impl Interpreter {
     fn execute(&mut self, op: Operation) {
         match op {
             Operation::Dup => {
-                let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
+                let stack = self.stacks.get_mut(self.active_stack).unwrap();
                 let val = stack.pop().unwrap();
                 match val {
                     Cell::Lit(l) => {
                         stack.push(Cell::Lit(l.clone()));
                         stack.push(Cell::Lit(l.clone()));
-                    },
+                    }
                     _ => panic!("only literals may be duped"),
                 }
             }
             Operation::Swap => {
-                let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
+                let stack = self.stacks.get_mut(self.active_stack).unwrap();
                 let stack_len = stack.len();
                 stack.swap(stack_len - 2, stack_len - 1);
             }
             Operation::Println => {
-                let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
+                let stack = self.stacks.get_mut(self.active_stack).unwrap();
                 println!("{}", stack.pop().unwrap());
             }
             Operation::Plus => {
-                let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
+                let stack = self.stacks.get_mut(self.active_stack).unwrap();
                 let l1 = stack.pop().unwrap();
                 let l2 = stack.pop().unwrap();
                 stack.push(l1 + l2);
             }
             Operation::Mul => {
-                let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
+                let stack = self.stacks.get_mut(self.active_stack).unwrap();
                 let l1 = stack.pop().unwrap();
                 let l2 = stack.pop().unwrap();
                 stack.push(l1 * l2);
             }
             Operation::Div => {
-                let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
+                let stack = self.stacks.get_mut(self.active_stack).unwrap();
                 let l1 = stack.pop().unwrap();
                 let l2 = stack.pop().unwrap();
                 stack.push(l2 / l1);
-            },
+            }
             Operation::Equal => {
-                let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
+                let stack = self.stacks.get_mut(self.active_stack).unwrap();
                 let l1 = stack.pop().unwrap();
                 let l2 = stack.pop().unwrap();
                 stack.push(Cell::Lit(Literal::Boolean(l1 == l2)));
-            },
+            }
             Operation::Lt => {
-                let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
+                let stack = self.stacks.get_mut(self.active_stack).unwrap();
                 let l1 = stack.pop().unwrap();
                 let l2 = stack.pop().unwrap();
                 stack.push(Cell::Lit(Literal::Boolean(l2 < l1)));
-            },
+            }
             Operation::Lte => {
-                let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
+                let stack = self.stacks.get_mut(self.active_stack).unwrap();
                 let l1 = stack.pop().unwrap();
                 let l2 = stack.pop().unwrap();
                 stack.push(Cell::Lit(Literal::Boolean(l2 <= l1)));
-            },
+            }
             Operation::Gt => {
-                let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
+                let stack = self.stacks.get_mut(self.active_stack).unwrap();
                 let l1 = stack.pop().unwrap();
                 let l2 = stack.pop().unwrap();
                 stack.push(Cell::Lit(Literal::Boolean(l2 > l1)));
-            },
+            }
             Operation::Gte => {
-                let mut stack = self.stacks.get_mut(self.active_stack).unwrap();
+                let stack = self.stacks.get_mut(self.active_stack).unwrap();
                 let l1 = stack.pop().unwrap();
                 let l2 = stack.pop().unwrap();
                 stack.push(Cell::Lit(Literal::Boolean(l2 >= l1)));
