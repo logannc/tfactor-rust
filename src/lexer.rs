@@ -5,6 +5,15 @@ use std::str::Chars;
 use std::fmt::Debug;
 
 // TODO: add more literal types
+// Lexer should be built from two registries:
+// 1. unordered registry of matching tokenizers (i.e., impl match(String) -> bool which takes over until the token is output)
+// 2. ordered registry of attempted parsers (i.e., first try u8, then i8, then u16, then i16, etc, then f32, then f64, etc.)
+
+// how should types be represented?
+// type ids probably needed for runtime defined types
+// need a value type (instead of literal) which is used to dispatch implementations of traits in types
+
+// need ANOTHER registry for operation implementation (scoped per engine implementation?)
 
 #[derive(Debug)]
 pub(crate) enum Token {
